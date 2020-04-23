@@ -10,7 +10,7 @@ This library is not affiliated with or endorsed by BMW Group.
 
 import datetime
 import logging
-import urllib
+import urllib.parse
 import os
 import json
 from threading import Lock
@@ -117,11 +117,19 @@ class ConnectedDriveAccount:  # pylint: disable=too-many-instance-attributes
                 raise OSError(msg) from exception
 
             if self._region == Regions.REST_OF_WORLD:
-                response_json = dict(
-                    urllib.parse.parse_qsl(urllib.parse.urlparse(response.headers['Location']).fragment)
-                )
+                parsed_url = urllib.parse.urlparse(response.headers['Location'])
+                query = parsed_url.fragment if len(parsed_url.fragment) > 0 else parsed_url.query
+                response_json = dict(urllib.parse.parse_qsl(query))
+                _LOGGER.debug('Parsing %s to %s', response.headers['Location'], json.dumps(response_json))
             else:
                 response_json = response.json()
+                _LOGGER.debug('Retrieved %s', response_json)
+
+            if 'error' in response_json:
+                msg = 'Authentication failed. Maybe your password is invalid? Reason: {}'.format(response_json['error'])
+                _LOGGER.error(msg)
+                _LOGGER.exception(OSError(msg))
+                raise OSError(msg)
 
             self._oauth_token = response_json['access_token']
             expiration_time = int(response_json['expires_in'])
@@ -226,7 +234,7 @@ class ConnectedDriveAccount:  # pylint: disable=too-many-instance-attributes
         self._get_oauth_token()
         response = self.send_request(VEHICLES_URL.format(server=self.server_url), headers=self.request_header,
                                      logfilename='vehicles')
-
+        _LOGGER.debug('Vehicles: %s', response.text)
         for vehicle_dict in response.json()['vehicles']:
             self._vehicles.append(ConnectedDriveVehicle(self, vehicle_dict))
 
