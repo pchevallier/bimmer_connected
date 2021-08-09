@@ -94,16 +94,16 @@ def get_status(args) -> None:
             vehicle.set_observer_position(args.lat, args.lng)
     account.update_vehicle_states()
 
-    print('Found {} vehicles: {}'.format(
-        len(account.vehicles),
-        ','.join([v.name for v in account.vehicles])))
+    #print('Found {} vehicles: {}'.format(
+    #    len(account.vehicles),
+    #    ','.join([v.name for v in account.vehicles])))
 
     for vehicle in account.vehicles:
-        print('VIN: {}'.format(vehicle.vin))
-        print('Mileage: {}'.format(vehicle.state.vehicle_status.mileage))
-        print('Vehicle properties:')
-        print(json.dumps(vehicle.attributes, indent=4))
-        print('Vehicle status:')
+    #    print('VIN: {}'.format(vehicle.vin))
+    #    print('Mileage: {}'.format(vehicle.state.vehicle_status.mileage))
+    #    print('Vehicle properties:')
+    #    print(json.dumps(vehicle.attributes, indent=4))
+    #    print('Vehicle status:')
         print(json.dumps(vehicle.state.vehicle_status.attributes, indent=4))
 
 
